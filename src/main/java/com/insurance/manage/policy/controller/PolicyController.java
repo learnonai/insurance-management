@@ -29,12 +29,12 @@ public class PolicyController {
         return policyService.getPolicyById(id);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public Policy updatePolicy(@PathVariable Long id, @RequestBody Policy policy){
         return policyService.updatePolicy(id, policy);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public String  deletePolicy(@PathVariable Long id){
          policyService.deletePolicy(id);
          return "Policy Deleted.";

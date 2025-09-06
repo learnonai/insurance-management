@@ -1,8 +1,11 @@
 package com.insurance.manage.policy.controller;
 
+import com.insurance.manage.policy.dto.PolicyRequest;
 import com.insurance.manage.policy.model.Policy;
 import com.insurance.manage.policy.service.PolicyService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,28 +18,33 @@ public class PolicyController {
     private PolicyService policyService;
 
     @PostMapping
-    public Policy createPolicy(@RequestBody Policy policy){
-      return    policyService.savePolicy(policy);
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public Policy createPolicy(@Valid @RequestBody PolicyRequest request){
+        return policyService.savePolicy(request);
     }
 
     @GetMapping
-    public List<Policy> geAlltPolicies(){
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('USER')")
+    public List<Policy> getAllPolicies(){
         return policyService.getAllPolicies();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('USER')")
     public Policy getPolicyById(@PathVariable Long id){
         return policyService.getPolicyById(id);
     }
 
     @PutMapping("/{id}")
-    public Policy updatePolicy(@PathVariable Long id, @RequestBody Policy policy){
-        return policyService.updatePolicy(id, policy);
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public Policy updatePolicy(@PathVariable Long id, @Valid @RequestBody PolicyRequest request){
+        return policyService.updatePolicy(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public String  deletePolicy(@PathVariable Long id){
-         policyService.deletePolicy(id);
-         return "Policy Deleted.";
+    @PreAuthorize("hasRole('ADMIN')")
+    public String deletePolicy(@PathVariable Long id){
+        policyService.deletePolicy(id);
+        return "Policy Deleted.";
     }
 }

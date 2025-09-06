@@ -6,37 +6,48 @@ import com.insurance.manage.auth.dto.RegisterRequest;
 import com.insurance.manage.auth.model.User;
 import com.insurance.manage.auth.repository.UserRepository;
 import com.insurance.manage.auth.security.JwtUtil;
+import com.insurance.manage.auth.security.Role;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
-
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public String register(RegisterRequest request){
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+        
         User user = User.builder()
                 .username(request.getUsername())
-                .password(encoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.valueOf(request.getRole().toUpperCase()))
+                .enabled(true)
                 .build();
         userRepository.save(user);
         return "User registration successfully.";
     }
+    
     public AuthResponse login(LoginRequest request){
-        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
-        if(user == null || !encoder.matches(request.getPassword(), user.getPassword())){
-            throw new RuntimeException("Invalid username or password.");
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
+            throw new RuntimeException("Invalid credentials");
         }
-        String token = jwtUtil.generateToken(user.getUsername());
-        return  new AuthResponse(token);
+        
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        return new AuthResponse(token);
     }
 }

@@ -1,9 +1,8 @@
 package com.insurance.manage.claim.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.insurance.manage.policy.model.Policy;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +21,15 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String claimNumber;
-    private String policyNumber;
-    private String claimantNmae;
+    private String claimantName;
     private Double claimAmount;
-    private String status;   //Pending ,Approve, Rejected.
+    private String status;
     private LocalDate dateFiled;
-
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "policy_id", nullable = false)
+    @JsonBackReference("policy-claims")
+    private Policy policy;
 }
